@@ -3,7 +3,7 @@
 A modern, high-performance portfolio website built with React, TypeScript, and Vite. This project showcases my skills, experience, and projects through an interactive and immersive user interface, featuring 3D elements and a personalized AI assistant.
 
 ![Portfolio Preview](/public/project-1.jpg) 
-*(Note: Replace with actual screenshot of the site)*
+
 
 ## ✨ Features
 
