@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, Terminal, Fingerprint, Brain, Activity, Waves } from 'lucide-react';
+import { Send, Sparkles, Terminal, Brain, Activity, Waves } from 'lucide-react';
 import { CharacterStage } from '../components/CharacterStage';
 
 export type Emotion =
@@ -22,7 +22,7 @@ interface Message {
 const preloadedPrompts = [
   'Who are you?',
   'Tell me about OtakuNexa',
-  'How do I save WhatsApp statuses?',
+
   'Do you like remote work?',
 ];
 
@@ -65,6 +65,7 @@ Sanghavi Infotech Pvt. Ltd.
 <li><b>Remote Work:</b> Yes 🌍💻</li>
 <li><b>Diet:</b> Vegetarian</li>
 <li><b>Salary Expectation:</b> $10,000 – $15,000 per year 💰 (flexible)</li>
+<li><b>Contact:</b> <a href="https://wa.me/918320097437" target="_blank" style="color:#25D366; font-weight:bold; text-decoration:none;">WhatsApp: +918320097437</a> | <a href="mailto:ayar.sys@gmail.com" style="color:#EA4335; font-weight:bold; text-decoration:none;">Email: ayar.sys@gmail.com</a></li>
 </ul>
 
 <b style="font-size:18px;">Key Projects</b>
@@ -137,17 +138,35 @@ const AmbientAurora = React.memo(function AmbientAurora() {
         className="absolute bottom-[-20%] left-[10%] w-[70%] h-[70%] rounded-full animate-blob animation-delay-4000 will-change-transform"
         style={{ background: 'radial-gradient(circle, rgba(91,110,227,0.15) 0%, transparent 60%)' }}
       />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay" />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none" />
     </div>
   );
 });
 
 const NeuralTyping = React.memo(function NeuralTyping() {
   return (
-    <div className="flex items-center gap-1.5 px-2.5 py-1.5">
-      <Fingerprint className="text-[#00f0ff] animate-pulse" size={14} />
-      <span className="text-[10px] font-mono text-[#00f0ff] tracking-widest uppercase animate-pulse">
-        Syncing...
+    <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-[#161b22] to-transparent rounded-lg border-l-2 border-[#00f0ff] shadow-[0_0_15px_rgba(0,240,255,0.1)]">
+      <div className="flex gap-1.5">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="w-2 h-2 rounded-full bg-[#00f0ff]"
+            animate={{
+              y: [0, -6, 0],
+              opacity: [0.4, 1, 0.4],
+              scale: [0.8, 1.2, 0.8]
+            }}
+            transition={{
+              duration: 0.8,
+              repeat: Infinity,
+              delay: i * 0.15,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+      </div>
+      <span className="text-xs font-mono text-[#00f0ff] tracking-widest uppercase opacity-80">
+        Synthesizing
       </span>
     </div>
   );
@@ -408,10 +427,10 @@ export function AIChat() {
 
     try {
       const minDelay = new Promise(resolve => setTimeout(resolve, 1500));
-     
+
       const kname = "gsk_";
       const klname = "aFAlVx7FX8c8PvPS2lADWGdyb3FYoT9JPxHT8jub4T8DKvlDujSb";
-      
+
       const fetchPromise = fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -685,13 +704,11 @@ export function AIChat() {
                     className="flex flex-col gap-1.5 sm:gap-2 items-start"
                   >
                     <span className="text-[10px] sm:text-xs font-mono tracking-wider text-[#00f0ff] px-1">ayar_ai@system:~$</span>
-                    <div className="flex gap-2 sm:gap-3">
-                      <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg border border-white/10 bg-[#161b22] p-0.5 flex items-center justify-center flex-shrink-0 opacity-50 overflow-hidden mt-0.5">
-                        <img src={`${import.meta.env.BASE_URL}avatar.jpg`} alt="AI" className="w-full h-full object-cover rounded-md grayscale" />
+                    <div className="flex gap-2 sm:gap-3 items-center">
+                      <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg border border-white/10 bg-[#161b22] p-0.5 flex items-center justify-center flex-shrink-0 opacity-80 overflow-hidden shadow-lg mt-0.5">
+                        <img src={`${import.meta.env.BASE_URL}avatar.jpg`} alt="AI" className="w-full h-full object-cover rounded-md" />
                       </div>
-                      <div className="bg-transparent rounded-lg flex items-center border border-white/5 h-7 sm:h-10">
-                        <NeuralTyping />
-                      </div>
+                      <NeuralTyping />
                     </div>
                   </motion.div>
                 )}
