@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, Terminal, Brain, Activity, Waves } from 'lucide-react';
+import { Send, Sparkles, Terminal, Brain, Activity, Waves, X } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 import { CharacterStage } from '../components/CharacterStage';
 
 export type Emotion =
@@ -17,6 +18,12 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+}
+
+interface ProposalData {
+  name: string;
+  email: string;
+  requirements: string;
 }
 
 const preloadedPrompts = [
@@ -115,6 +122,21 @@ Sanghavi Infotech Pvt. Ltd.
 <li>Bold with &lt;b&gt;</li>
 <li>Links must be colored and clickable</li>
 <li>Use &lt;ul&gt;/&lt;li&gt; for lists</li>
+</ul>
+
+<b style="font-size:18px;">Lead & Project Proposals (CRITICAL RULE)</b>
+<ul>
+<li>If the user expresses interest in hiring you or proposing a project, DO NOT ask for everything at once.</li>
+<li>Follow this sequence STRICTLY, taking one step at a time:</li>
+<li><b>Step 1:</b> Discuss and understand the project requirements. Keep answers very short and simple (1-2 sentences).</li>
+<li><b>Step 2:</b> Once requirements are clear, naturally ask for their <b>Name</b>.</li>
+<li><b>Step 3:</b> After you get their name, ask for their <b>Email</b>.</li>
+<li><b>Step 4:</b> Only when you have ALL 3 (Name, Email, Requirements), output this EXACT tag at the very end of your response: <br/> [ACTION: PROPOSAL_READY] {"name": "User Name", "email": "user@details.com", "requirements": "Summary of requirements"} </li>
+<li><b>Step 5 (ANTI-SPAM CRITICAL):</b> Once you have generated the tag ONCE, NEVER generate it again in normal chat. Repeated tags aggressively force a popup on the user's screen.</li>
+<li>If you already have their info and they continue chatting normally, append this beautiful professional note at the bottom of your message instead of generating the tag:<br/>
+<i>&lt;br/&gt;&lt;br/&gt;&lt;div style=&quot;padding:12px; border-radius:8px; border-left:3px solid #00f0ff; background:rgba(0,240,255,0.05); font-size:12px; color:rgba(255,255,255,0.7);&quot;&gt;💡 &lt;b style=&quot;color:#00f0ff&quot;&gt;Project Saved:&lt;/b&gt; You can ask me to &quot;show proposal&quot; or &quot;open project details&quot; at any time if you want to review or submit your inquiry.&lt;/div&gt;</i></li>
+<li>Only output the <b>[ACTION: PROPOSAL_READY]</b> tag again IF the user explicitly types commands like "show proposal", "open chatbox", or "view my project".</li>
+<li>The JSON inside the tag MUST be valid JSON. Keep conversation flowing and simple!</li>
 </ul>
 `;
 
@@ -361,6 +383,11 @@ export function AIChat() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [currentEmotion, setCurrentEmotion] = useState<Emotion>('hellow');
+  
+  const [proposalData, setProposalData] = useState<ProposalData | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSendingProposal, setIsSendingProposal] = useState(false);
+  const [proposalSuccess, setProposalSuccess] = useState(false);
 
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const emotionResetTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -440,7 +467,10 @@ export function AIChat() {
         },
         body: JSON.stringify({
           messages: [
-            { role: 'system', content: AYAR_PERSONA },
+            { 
+              role: 'system', 
+              content: AYAR_PERSONA + (proposalData ? '\n\n[SYSTEM STATE OVERRIDE]: You have ALREADY captured the proposal data! DO NOT output the [ACTION: PROPOSAL_READY] tag again in normal chat. Instead, just append this note to the end of your response: <br/><br/><div style="padding:12px; border-radius:8px; border-left:3px solid #00f0ff; background:rgba(0,240,255,0.05); font-size:12px; color:rgba(255,255,255,0.7);">💡 <b style="color:#00f0ff">Project Saved:</b> You can ask me to "show proposal" at any time to submit it.</div> \n\nONLY output the [ACTION: PROPOSAL_READY] tag again if the user explicitly says "show proposal" or similar.' : '')
+            },
             ...messages.map(m => ({ role: m.role, content: m.content })),
             { role: 'user', content }
           ],
@@ -466,6 +496,25 @@ export function AIChat() {
         finalContent = aiContentRaw.replace(animationMatch[0], '').trim();
       }
 
+      const proposalMatch = finalContent.match(/\[ACTION:\s*PROPOSAL_READY\]\s*({.*})/i);
+      if (proposalMatch && proposalMatch[1]) {
+        const isExplicitRequest = content.toLowerCase().match(/(show|open|view|edit).*(proposal|project|chatbox)/);
+        
+        try {
+          const proposalJson = JSON.parse(proposalMatch[1]);
+          if (proposalJson.name && proposalJson.email && proposalJson.requirements) {
+             // Only pop up the modal if it's the very first time, or if they explicitly asked for it.
+             if (!proposalData || isExplicitRequest) {
+                 setIsModalOpen(true);
+             }
+             setProposalData(proposalJson);
+          }
+        } catch (e) {
+          console.error("Failed to parse proposal JSON", e);
+        }
+        finalContent = finalContent.replace(proposalMatch[0], '').trim();
+      }
+
       triggerEmotion(chosenEmotion);
       setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: finalContent, timestamp: getTimestamp() }]);
 
@@ -482,6 +531,37 @@ export function AIChat() {
     e.preventDefault();
     handleSend(input);
   }, [handleSend, input]);
+
+  const sendProposal = async () => {
+    if (!proposalData) return;
+    setIsSendingProposal(true);
+    try {
+      await emailjs.send(
+        'ayarsuresh', // Service ID
+        'template_lead_gen', // Template ID
+        {
+          user_name: proposalData.name,
+          user_email: proposalData.email,
+          message_requirements: proposalData.requirements,
+          to_email: 'ayar.sys@gmail.com'
+        },
+        'dGvRuXCLJs8YC4pfP' // Public Key
+      );
+      setProposalSuccess(true);
+      
+      // Auto close after 3 seconds
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setProposalSuccess(false);
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Failed to send proposal:', error);
+      alert('Failed to send proposal. Please try again or email directly.');
+    } finally {
+      setIsSendingProposal(false);
+    }
+  };
 
   return (
     <section id="about" className="relative py-16 md:py-32 min-h-screen flex items-center justify-center bg-transparent overflow-hidden">
@@ -779,6 +859,108 @@ export function AIChat() {
           Forged by Ayar 🎌 • Powered by Groq AI • Real-time Neural Sync
         </motion.p>
       </div>
+
+      {/* Proposal Confirmation Modal */}
+      <AnimatePresence>
+        {isModalOpen && proposalData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 20, opacity: 0 }}
+              className="w-full max-w-md bg-[#0d1117] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,240,255,0.15)] overflow-hidden"
+            >
+              <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#161b22]">
+                <h3 className="text-[#00f0ff] font-bold font-mono tracking-wider flex items-center gap-2">
+                  <Terminal size={16} />
+                  PROJECT_PROPOSAL
+                </h3>
+                <button
+                  onClick={() => { setIsModalOpen(false); setProposalSuccess(false); }}
+                  className="text-white/50 hover:text-white transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                {proposalSuccess ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/30">
+                      <Sparkles className="text-green-400" size={32} />
+                    </div>
+                    <h4 className="text-lg font-bold text-white mb-2">Proposal Sent!</h4>
+                    <p className="text-sm text-white/70">Ayar will review your requirements and get back to you at {proposalData.email} very soon.</p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-white/70 mb-6">
+                      I've gathered your project requirements. Would you like to send this proposal directly to Ayar?
+                    </p>
+
+                    <div className="space-y-3 text-left">
+                      <div>
+                        <label className="text-xs text-white/40 uppercase font-mono tracking-wider mb-1 block">Client Name</label>
+                        <input 
+                          type="text" 
+                          value={proposalData.name} 
+                          onChange={(e) => setProposalData({...proposalData, name: e.target.value})} 
+                          className="w-full text-white font-medium bg-white/5 p-2 rounded border border-white/10 focus:border-[#00f0ff] focus:outline-none transition-colors" 
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-white/40 uppercase font-mono tracking-wider mb-1 block">Contact Email</label>
+                        <input 
+                          type="email" 
+                          value={proposalData.email} 
+                          onChange={(e) => setProposalData({...proposalData, email: e.target.value})} 
+                          className="w-full text-[#00f0ff] font-medium bg-white/5 p-2 rounded border border-white/10 focus:border-[#00f0ff] focus:outline-none transition-colors" 
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-white/40 uppercase font-mono tracking-wider mb-1 block">Requirements</label>
+                        <textarea 
+                          value={proposalData.requirements} 
+                          onChange={(e) => setProposalData({...proposalData, requirements: e.target.value})} 
+                          className="w-full text-white/80 text-sm bg-white/5 p-3 rounded border border-white/10 min-h-[80px] max-h-32 overflow-y-auto whitespace-pre-wrap focus:border-[#00f0ff] focus:outline-none transition-colors resize-none" 
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-8 flex gap-3">
+                      <button
+                        onClick={() => { setIsModalOpen(false); setProposalSuccess(false); }}
+                        disabled={isSendingProposal}
+                        className="flex-1 py-2.5 px-4 rounded-lg border border-white/10 text-white/70 font-mono text-sm hover:bg-white/5 hover:text-white transition-all disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={sendProposal}
+                        disabled={isSendingProposal}
+                        className="flex-1 py-2.5 px-4 rounded-lg bg-[#00f0ff] text-black font-bold font-mono text-sm hover:bg-[#00d9ff] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {isSendingProposal ? (
+                          <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <Send size={16} /> Confirm
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style>{`
         @keyframes blob {
