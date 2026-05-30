@@ -38,7 +38,7 @@ A modern, high-performance portfolio website built with React, TypeScript, and V
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/portfolio.git
+   git clone https://github.com/Ayar-Suresh/portfolio.git
    cd portfolio
    ```
 
