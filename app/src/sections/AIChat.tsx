@@ -831,7 +831,7 @@ export function AIChat() {
                       onChange={(e) => setInput(e.target.value)}
                       placeholder="Enter command..."
                       maxLength={500}
-                      className="w-full min-w-0 bg-transparent border-none text-[13px] sm:text-base font-mono text-white placeholder:text-white/30 focus:outline-none focus:ring-0 py-2 sm:py-2.5 pr-2"
+                      className="w-full min-w-0 bg-transparent border-none text-base font-mono text-white placeholder:text-white/30 focus:outline-none focus:ring-0 py-2 sm:py-2.5 pr-2"
                     />
                     <motion.button
                       type="submit"

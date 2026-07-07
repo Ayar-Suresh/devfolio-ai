@@ -77,8 +77,13 @@
   body {
     @apply bg-[#0d1117] text-[#c9d1d9] antialiased;
     font-family: 'Inter', system-ui, sans-serif;
-    cursor: none;
     overflow-x: hidden;
+  }
+  
+  @media (pointer: fine) {
+    body {
+      cursor: none;
+    }
   }
 
   ::selection {

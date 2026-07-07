@@ -240,7 +240,7 @@ function ProjectCard({
                 {project.title}
               </h3>
 
-              <p className="text-sm text-[#8b949e] line-clamp-2 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+              <p className="text-sm text-[#8b949e] line-clamp-2 font-mono opacity-90 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-100 mt-2">
                 {project.description}
               </p>
             </div>
