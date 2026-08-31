@@ -104,7 +104,7 @@ export function Hero() {
                 </div>
                 <div className="text-xs text-white/40 font-mono flex items-center gap-2">
                   <Terminal size={12} />
-                  <span>ayar.dev — -zsh — 80x24</span>
+                  <span>ayar.sys — -zsh — 80x24</span>
                 </div>
                 <div className="w-10" /> {/* Spacer */}
               </div>
@@ -283,7 +283,7 @@ export function Hero() {
                 {/* Card Content */}
                 <div className="text-center relative z-10">
                   <h3 className="text-2xl font-bold text-white mb-1 font-mono">Ayar Suresh</h3>
-                  <p className="text-[#7e6ee3] text-sm font-mono mb-6">@ayar.dev</p>
+                  <p className="text-[#7e6ee3] text-sm font-mono mb-6">@ayar.sys</p>
 
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-2 mb-6 border-y border-[#30363d] py-4">
@@ -357,7 +357,7 @@ export function Hero() {
 
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#7e6ee3] animate-ping" />
-                <p className="text-[#7e6ee3] text-xs font-mono">@ayar.dev</p>
+                <p className="text-[#7e6ee3] text-xs font-mono">@ayar.sys</p>
               </div>
 
               {/* Horizontal Scroll Tech Stack */}

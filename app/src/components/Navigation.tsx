@@ -51,7 +51,7 @@ export function Navigation() {
             data-cursor-hover
           >
             <span className="text-[#00f0ff]">{'>'}</span>
-            <span className="text-white group-hover:text-[#00f0ff] transition-colors">~/ayar.dev</span>
+            <span className="text-white group-hover:text-[#00f0ff] transition-colors">~/ayar.sys</span>
             <span className="w-2 h-4 bg-[#7e6ee3] animate-pulse ml-0.5" />
           </a>
 
