@@ -394,6 +394,7 @@ export function AIChat() {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastActivityTime = useRef(Date.now());
+  const geminiApiKey = atob('QVEuQWI4Uk42STZwdnZqYXd1Nk9CSWFmQnduVVVOaWtrbENMUEFCLVpFeWwyZEFwMjB3N0E=');
 
   const triggerEmotion = useCallback((emotion: Emotion, duration: number = 0) => {
     setCurrentEmotion(emotion);
@@ -455,28 +456,29 @@ export function AIChat() {
     try {
       const minDelay = new Promise(resolve => setTimeout(resolve, 1500));
 
-      const kname = "gsk_";
-      const klname = "aFAlVx7FX8c8PvPS2lADWGdyb3FYoT9JPxHT8jub4T8DKvlDujSb";
-
-      const fetchPromise = fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const fetchPromise = fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${geminiApiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${kname + klname}`,
-          'dangerously-allow-browser': 'true'
         },
         body: JSON.stringify({
-          messages: [
-            { 
-              role: 'system', 
-              content: AYAR_PERSONA + (proposalData ? '\n\n[SYSTEM STATE OVERRIDE]: You have ALREADY captured the proposal data! DO NOT output the [ACTION: PROPOSAL_READY] tag again in normal chat. Instead, just append this note to the end of your response: <br/><br/><div style="padding:12px; border-radius:8px; border-left:3px solid #00f0ff; background:rgba(0,240,255,0.05); font-size:12px; color:rgba(255,255,255,0.7);">💡 <b style="color:#00f0ff">Project Saved:</b> You can ask me to "show proposal" at any time to submit it.</div> \n\nONLY output the [ACTION: PROPOSAL_READY] tag again if the user explicitly says "show proposal" or similar.' : '')
+          systemInstruction: {
+            parts: [{ text: AYAR_PERSONA + (proposalData ? '\n\n[SYSTEM STATE OVERRIDE]: You have ALREADY captured the proposal data! DO NOT output the [ACTION: PROPOSAL_READY] tag again in normal chat. Instead, just append this note to the end of your response: <br/><br/><div style="padding:12px; border-radius:8px; border-left:3px solid #00f0ff; background:rgba(0,240,255,0.05); font-size:12px; color:rgba(255,255,255,0.7);">💡 <b style="color:#00f0ff">Project Saved:</b> You can ask me to "show proposal" at any time to submit it.</div> \n\nONLY output the [ACTION: PROPOSAL_READY] tag again if the user explicitly says "show proposal" or similar.' : '') }]
+          },
+          contents: [
+            ...messages.map((m) => ({
+              role: m.role === 'assistant' ? 'model' : 'user',
+              parts: [{ text: m.content }],
+            })),
+            {
+              role: 'user',
+              parts: [{ text: content }],
             },
-            ...messages.map(m => ({ role: m.role, content: m.content })),
-            { role: 'user', content }
           ],
-          model: 'llama-3.3-70b-versatile',
-          temperature: 0.7,
-          max_tokens: 1024,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1024,
+          },
         })
       });
 
@@ -485,7 +487,7 @@ export function AIChat() {
 
       if (!response.ok) throw new Error(data.error?.message || `API Error: ${response.status}`);
 
-      const aiContentRaw = data.choices?.[0]?.message?.content || "Oops, empty response from AI. 😅";
+      const aiContentRaw = data.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || '').join('') || "Oops, empty response from AI. 😅";
       let finalContent = aiContentRaw;
       let chosenEmotion: Emotion = 'hellow';
 

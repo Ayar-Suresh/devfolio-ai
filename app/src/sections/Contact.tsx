@@ -325,11 +325,11 @@ export function Contact() {
                 <div>
                   <p className="text-sm text-white/50">Email</p>
                   <a
-                    href="mailto:ahir385350@gmail.com"
+                    href="mailto:ayar.sys@gmail.com"
                     className="text-white hover:text-[#00f0ff] transition-colors"
                     data-cursor-hover
                   >
-                    ahir385350@gmail.com
+                    ayar.sys@gmail.com
                   </a>
                 </div>
               </div>
