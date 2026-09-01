@@ -44,6 +44,7 @@ A modern, high-performance portfolio website built with React, TypeScript, and V
 
 2. **Install dependencies**
    ```bash
+   cd app
    npm install
    ```
 
@@ -56,6 +57,21 @@ A modern, high-performance portfolio website built with React, TypeScript, and V
    ```bash
    npm run build
    ```
+
+## 🌍 Deployment (GitHub Pages)
+
+This repository now includes an automatic GitHub Pages deploy workflow.
+
+### One-time setup
+
+1. Go to **Repository Settings → Pages**.
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+3. Push to `main` (or run the deploy workflow manually from the **Actions** tab).
+
+### Custom domain
+
+- The domain is configured through `app/public/CNAME`.
+- If your domain changes, update that file to the new domain and push again.
 
 ## 🤖 AI Configuration
 
